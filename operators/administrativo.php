@@ -1,9 +1,16 @@
 <?php
 session_start();
 
+if (!isset($_SESSION["usuario_id"])) {
+    header("Location: login.php");
+    exit();
+}
+
 include 'connection.php';
 
+// Consulta para obter todas as denúncias, incluindo o IP
 $resultado = $conn->query("SELECT * FROM denuncias");
+
 ?>
 
 <!DOCTYPE html>
@@ -12,7 +19,7 @@ $resultado = $conn->query("SELECT * FROM denuncias");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <title>Saine | Relatos</title>
+    <title>Área Administrativa</title>
 </head>
 <body>
     <div class="container">
@@ -20,11 +27,12 @@ $resultado = $conn->query("SELECT * FROM denuncias");
         <h2>Denúncias:</h2>
 
         <?php
-        // Exibir denúncias
+        // Exibir denúncias com IP
         while ($row = $resultado->fetch_assoc()) {
             echo "<p><strong>Data/Hora:</strong> {$row['data_hora']}<br>";
             echo "<strong>Nome:</strong> {$row['nome']}<br>";
-            echo "<strong>Denúncia:</strong> {$row['mensagem']}</p>";
+            echo "<strong>Denúncia:</strong> {$row['mensagem']}<br>";
+            echo "<strong>IP:</strong> {$row['ip']}</p>";
             echo "<hr>";
         }
         ?>
