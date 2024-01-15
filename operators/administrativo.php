@@ -3,9 +3,7 @@ session_start();
 
 include 'connection.php';
 
-
 $resultado = $conn->query("SELECT * FROM denuncias");
-
 ?>
 
 <!DOCTYPE html>
@@ -14,7 +12,7 @@ $resultado = $conn->query("SELECT * FROM denuncias");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <title>Área Administrativa</title>
+    <title>Saine | Relatos</title>
 </head>
 <body>
     <div class="container">

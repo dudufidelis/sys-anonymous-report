@@ -97,6 +97,12 @@ form > button {
     color: #FFF;
     font-size: 1.5rem;
     font-weight: 400;
+    cursor: pointer;
+    transition: all ease-in-out 200ms;
+}
+
+form > button:hover {
+    opacity: 0.9;
 }
 
 /* ScrollBar */

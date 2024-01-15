@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Mate&family=Montserrat:ital,wght@0,300;0,400;0,600;1,400;1,500&family=Preahvihear&display=swap');
+
+:root {
+    --bg-color: #F4F4F4;
+}
+
+* {
+    outline: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Mate', serif;
+}
+
+body{
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30rem;
+    height: 12rem;
+    border-radius: 1.4rem;
+    background: #FFF;
+    box-shadow: 5px 4px 6px 0px rgba(0, 0, 0, 0.15);
+}
+
+h1 {
+    color: #000;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 400;
+}
+
+.green {
+    color: #009A22;
+}
+
