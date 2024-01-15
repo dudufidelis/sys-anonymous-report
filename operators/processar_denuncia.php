@@ -2,26 +2,32 @@
 
 include 'connection.php';
 
-if ($conn->connect_error) {
-    die("Erro de conexão: " . $conn->connect_error);
-}
-
-
 $nome = isset($_POST['nome']) ? $_POST['nome'] : null;
 $mensagem = $_POST['mensagem'];
 
 
-$stmt = $conn->prepare("INSERT INTO denuncias (nome, mensagem) VALUES (?, ?)");
+$stmt = $conn->prepare("INSERT INTO denunciass (nome, mensagem) VALUES (?, ?)");
+
+if (!$stmt) {
+    $erro = "Erro de preparação da consulta: " . $conn->error . "\n";
+    error_log($erro, 3, "../logs/errors.log");
+    header("Location: error.html");
+    exit();
+}
+
 $stmt->bind_param("ss", $nome, $mensagem);
 
 
+
+
 if ($stmt->execute()) {
-    echo "Denúncia enviada com sucesso!";
+    header("Location: ../success.html");
+    exit();
 } else {
-    echo "Erro ao enviar a denúncia: " . $stmt->error;
+    $erro = "Erro ao enviar a denúncia: " . $stmt->error . "\n";
+    error_log($erro, 3, "../logs/errors.log");
+    header("Location: error.html");
+    exit();
 }
 
-
-$stmt->close();
-$conn->close();
 ?>
