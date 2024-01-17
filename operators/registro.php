@@ -50,7 +50,6 @@ $conn->close();
             <button type="submit">Registrar</button>
         </form>
 
-        <p>Já possui uma conta? <a href="login.php">Faça login</a></p>
     </div>
 </body>
 </html>
