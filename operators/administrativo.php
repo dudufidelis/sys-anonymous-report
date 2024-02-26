@@ -85,9 +85,6 @@ $resultado = $conn->query($query);
                 while ($row = $resultado->fetch_assoc()) {
                     $dataFormatada = date('d/m/Y', strtotime($row['data_hora']));
                     echo "<div class='reports'>";
-                    echo "<div class='ip-row'>";
-                    echo "{$row['ip']}";
-                    echo "</div>";
                     echo "<div class='report-info'>";
                     echo "<p>Nome: {$row['nome']}</p>";
                     echo "<p>Data: $dataFormatada</p>";
