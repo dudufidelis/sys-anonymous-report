@@ -18,15 +18,52 @@
                 <h2>Construindo um Ambiente <br> Saudável e Seguro.</h2>
                 <div class="bar"></div>
             </header>
-            <form action="operators/processar_denuncia.php" method="post">
-                <label for="nome">Nome (opcional):</label>
-                <input type="text" id="nome" name="nome" maxlength="40">
-                <label for="mensagem">Relato:</label>
+            <form action="operators/processar_denuncia.php" method="post" autocomplete="off">
+                <div class="identificacao-toggle">
+                    <input type="checkbox" id="deseja_identificar" name="deseja_identificar" value="1">
+                    <label for="deseja_identificar">Deseja se identificar?</label>
+                </div>
+                <div id="grupo_identificacao" class="identificacao-group">
+                    <label for="nome">Nome *</label>
+                    <input type="text" id="nome" name="nome" maxlength="40" placeholder="Seu nome completo">
+                    <div class="grid-2">
+                        <div class="campo">
+                            <label for="telefone">Telefone:</label>
+                            <input type="text" id="telefone" name="telefone" maxlength="20" placeholder="(DDD) 90000-0000">
+                        </div>
+                        <div class="campo">
+                            <label for="cpf">CPF:</label>
+                            <input type="text" id="cpf" name="cpf" maxlength="14" placeholder="000.000.000-00">
+                        </div>
+                    </div>
+                </div>
+                <label for="mensagem">Relato *</label>
                 <textarea id="mensagem" name="mensagem" required maxlength="3000"></textarea>
                 <button class="btn-form" type="submit">Enviar</button>
             </form>
         </div>
     </section>
-    
+    <script>
+        (function(){
+            const chk=document.getElementById('deseja_identificar');
+            const grupo=document.getElementById('grupo_identificacao');
+            const campos=['nome','telefone','cpf'].map(id=>document.getElementById(id));
+            const tel=document.getElementById('telefone');
+            const cpf=document.getElementById('cpf');
+            const clean=v=>v.replace(/[^0-9]/g,'');
+            const valTel=v=>{const d=clean(v);return d.length===10||d.length===11;};
+            const valCpf=v=>{const d=clean(v);return d.length===11;};
+            function setErro(c,m){c.classList.add('erro');let s=c.parentElement.querySelector('small.msg-erro');if(!s){s=document.createElement('small');s.className='msg-erro';c.parentElement.appendChild(s);}s.textContent=m;}
+            function clearErro(c){c.classList.remove('erro');const s=c.parentElement.querySelector('small.msg-erro');if(s)s.remove();}
+            function toggle(){if(chk.checked){grupo.style.display='flex';['telefone','cpf','nome'].forEach(id=>document.getElementById(id).required=true);}else{grupo.style.display='none';['telefone','cpf','nome'].forEach(id=>document.getElementById(id).required=false);campos.forEach(c=>{c.value='';clearErro(c);});}}
+            chk.addEventListener('change',toggle);toggle();
+            function maskTel(e){let d=clean(e.target.value).slice(0,11);if(d.length<=10){d=d.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');}else{d=d.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3');}e.target.value=d.replace(/-$/,'');}
+            function maskCpf(e){let d=clean(e.target.value).slice(0,11);d=d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d{1,2})$/,'.$1-$2');e.target.value=d;}
+            tel.addEventListener('input',maskTel);cpf.addEventListener('input',maskCpf);
+            function validar(c){clearErro(c);if(!chk.checked) return true;const id=c.id;const v=c.value.trim();if(!v){setErro(c,'Obrigatório');return false;}if(id==='telefone'&&!valTel(v)){setErro(c,'Telefone inválido');return false;}if(id==='cpf'&&!valCpf(v)){setErro(c,'CPF inválido');return false;}return true;}
+            campos.forEach(c=>c.addEventListener('blur',()=>validar(c)));
+            document.querySelector('form').addEventListener('submit',e=>{if(!chk.checked)return; if(!campos.every(c=>validar(c))){e.preventDefault();}});
+        })();
+    </script>
 </body>
 </html>
