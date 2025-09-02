@@ -1,58 +1,64 @@
 <?php
-
+// Endpoint sempre JSON para envio de denúncias.
+header('Content-Type: application/json; charset=utf-8');
 include 'connection.php';
 
-$nome = isset($_POST['nome']) ? trim($_POST['nome']) : '';
-$mensagem = trim($_POST['mensagem']);
+function out($ok, $msg, $code = 200, $extra = []) {
+    http_response_code($ok ? 200 : $code);
+    echo json_encode(array_merge(['success' => (bool)$ok, 'message' => $msg], $extra));
+    exit();
+}
 
-// Controle de identificação
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    out(false, 'Método inválido.', 405);
+}
+
+$nome = isset($_POST['nome']) ? trim($_POST['nome']) : '';
+$mensagem = isset($_POST['mensagem']) ? trim($_POST['mensagem']) : '';
+$minLen = 150; $maxLen = 3000;
+if ($mensagem === '') {
+    out(false, 'O campo relato é obrigatório.', 422);
+}
+// Comprimento seguro multibyte
+$len = function_exists('mb_strlen') ? mb_strlen($mensagem, 'UTF-8') : strlen($mensagem);
+if ($len < $minLen) {
+    out(false, 'Relato muito curto. Mínimo de ' . $minLen . ' caracteres.', 422);
+}
+if ($len > $maxLen) {
+    out(false, 'Relato muito longo. Máximo de ' . $maxLen . ' caracteres.', 422);
+}
+
 $desejaIdentificar = isset($_POST['deseja_identificar']);
-$telefone = null;
-$cpf = null;
+$telefone = null; $cpf = null;
 if ($desejaIdentificar) {
-    // Nome obrigatório
-    if ($nome === '') {
-        header("Location: ../redirect/error.html");
-        exit();
-    }
-    // Telefone: precisa conter 10 ou 11 dígitos
+    if ($nome === '') out(false, 'Nome obrigatório.', 422);
     $telefoneDigits = preg_replace('/[^0-9]/', '', $_POST['telefone'] ?? '');
     if (!preg_match('/^\d{10,11}$/', $telefoneDigits) || preg_match('/^(\d)\1+$/', $telefoneDigits)) {
-        header("Location: ../redirect/error.html");
-        exit();
+        out(false, 'Telefone inválido.', 422);
     }
     $telefone = $telefoneDigits;
-    // CPF: exatamente 11 dígitos
     $cpfDigits = preg_replace('/[^0-9]/', '', $_POST['cpf'] ?? '');
     if (!preg_match('/^\d{11}$/', $cpfDigits) || preg_match('/^(\d)\1+$/', $cpfDigits)) {
-        header("Location: ../redirect/error.html");
-        exit();
+        out(false, 'CPF inválido.', 422);
     }
     $cpf = $cpfDigits;
 } else {
-    // Usuário optou por permanecer anônimo
     $nome = null;
 }
 
-$ip = $_SERVER['REMOTE_ADDR'];
+$ip = $_SERVER['REMOTE_ADDR'] ?? null;
 
-$stmt = $conn->prepare("INSERT INTO denuncias (nome, telefone, cpf, mensagem, ip) VALUES (?, ?, ?, ?, ?)");
-
+$stmt = $conn->prepare('INSERT INTO denuncias (nome, telefone, cpf, mensagem, ip) VALUES (?, ?, ?, ?, ?)');
 if (!$stmt) {
-    $erro = "Erro de preparação da consulta: " . $conn->error . "\n";
-    error_log($erro, 3, "../logs/errors.log");
-    header("Location: ../redirect/error.html");
-    exit();
+    error_log('Erro prepare: ' . $conn->error . "\n", 3, '../logs/errors.log');
+    out(false, 'Falha interna (prep).', 500);
 }
-
-$stmt->bind_param("sssss", $nome, $telefone, $cpf, $mensagem, $ip);
-
-if ($stmt->execute()) {
-    header("Location: ../redirect/success.html");
-    exit();
-} else {
-    $erro = "Erro ao enviar a denúncia: " . $stmt->error . "\n";
-    error_log($erro, 3, "../logs/errors.log");
-    header("Location: ../redirect/error.html");
-    exit();
+if (!$stmt->bind_param('sssss', $nome, $telefone, $cpf, $mensagem, $ip)) {
+    error_log('Erro bind: ' . $stmt->error . "\n", 3, '../logs/errors.log');
+    out(false, 'Falha interna (bind).', 500);
 }
+if (!$stmt->execute()) {
+    error_log('Erro exec: ' . $stmt->error . "\n", 3, '../logs/errors.log');
+    out(false, 'Erro ao salvar. Tente novamente.', 500);
+}
+out(true, 'Relato enviado com sucesso.');

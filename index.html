@@ -18,7 +18,7 @@
                 <h2>Construindo um Ambiente <br> Saudável e Seguro.</h2>
                 <div class="bar"></div>
             </header>
-            <form action="operators/processar_denuncia.php" method="post" autocomplete="off">
+            <form id="form-denuncia" action="operators/processar_denuncia.php" method="post" autocomplete="off">
                 <div class="identificacao-toggle">
                     <input type="checkbox" id="deseja_identificar" name="deseja_identificar" value="1">
                     <label for="deseja_identificar">Deseja se identificar?</label>
@@ -37,17 +37,30 @@
                         </div>
                     </div>
                 </div>
-                <label for="mensagem">Relato *</label>
-                <textarea id="mensagem" name="mensagem" required maxlength="3000"></textarea>
-                <button class="btn-form" type="submit">Enviar</button>
+                <label for="mensagem">Relato * <small id="contador" style="font-weight:normal;font-size:.75rem;opacity:.8">0 / 3000</small></label>
+                <textarea id="mensagem" name="mensagem" required maxlength="3000" data-minlength="150"></textarea>
+                <button class="btn-form" id="btn-submit" type="submit">
+                    <span class="label">Enviar</span>
+                    <span class="spinner" aria-hidden="true" style="display:none"></span>
+                </button>
             </form>
         </div>
     </section>
+    <!-- Modal -->
+    <div id="feedback-modal" class="modal-feedback" aria-hidden="true" role="alertdialog" aria-live="assertive">
+        <div class="modal-content">
+            <span id="modal-msg">...</span>
+        </div>
+    </div>
     <script>
         (function(){
             const chk=document.getElementById('deseja_identificar');
             const grupo=document.getElementById('grupo_identificacao');
             const campos=['nome','telefone','cpf'].map(id=>document.getElementById(id));
+            const textarea=document.getElementById('mensagem');
+            const contador=document.getElementById('contador');
+            const minMsg = parseInt(textarea.getAttribute('data-minlength'),10)||150;
+            const maxMsg = parseInt(textarea.getAttribute('maxlength'),10)||3000;
             const tel=document.getElementById('telefone');
             const cpf=document.getElementById('cpf');
             const clean=v=>v.replace(/[^0-9]/g,'');
@@ -62,7 +75,85 @@
             tel.addEventListener('input',maskTel);cpf.addEventListener('input',maskCpf);
             function validar(c){clearErro(c);if(!chk.checked) return true;const id=c.id;const v=c.value.trim();if(!v){setErro(c,'Obrigatório');return false;}if(id==='telefone'&&!valTel(v)){setErro(c,'Telefone inválido');return false;}if(id==='cpf'&&!valCpf(v)){setErro(c,'CPF inválido');return false;}return true;}
             campos.forEach(c=>c.addEventListener('blur',()=>validar(c)));
-            document.querySelector('form').addEventListener('submit',e=>{if(!chk.checked)return; if(!campos.every(c=>validar(c))){e.preventDefault();}});
+            const form=document.getElementById('form-denuncia');
+            // Modal helpers
+            const modal=document.getElementById('feedback-modal');
+            const modalMsg=document.getElementById('modal-msg');
+            let modalTimer=null;
+            function showModal(msg, ok){
+                modalMsg.textContent=msg;
+                document.body.classList.add('modal-open');
+                modal.className='modal-feedback show ' + (ok?'ok':'error');
+                modal.setAttribute('aria-hidden','false');
+                if(modalTimer) clearTimeout(modalTimer);
+                modalTimer=setTimeout(()=>{closeModal();},3000);
+            }
+            function closeModal(){
+                modal.classList.add('hiding');
+                setTimeout(()=>{
+                    modal.className='modal-feedback';
+                    modal.setAttribute('aria-hidden','true');
+                    document.body.classList.remove('modal-open');
+                },200);
+            }
+            modal.addEventListener('click',closeModal);
+
+            const btn=document.getElementById('btn-submit');
+            const spinner=btn.querySelector('.spinner');
+            const btnLabel=btn.querySelector('.label');
+            function setLoading(on){
+                if(on){
+                    btn.disabled=true;btn.classList.add('loading');
+                    spinner.style.display='inline-block';
+                    btnLabel.textContent='Enviando...';
+                } else {
+                    btn.disabled=false;btn.classList.remove('loading');
+                    spinner.style.display='none';
+                    btnLabel.textContent='Enviar';
+                }
+            }
+
+            // Contador de caracteres
+            function updateCount(){
+                const len = textarea.value.length;
+                contador.textContent = len + ' / ' + maxMsg;
+                if(len < minMsg){
+                    contador.style.color = '#c0392b';
+                } else if(len > maxMsg){
+                    contador.style.color = '#c0392b';
+                } else {
+                    contador.style.color = '#1f6e2c';
+                }
+            }
+            textarea.addEventListener('input', updateCount); updateCount();
+
+            form.addEventListener('submit',e=>{
+                // valida campos identificacao se marcado
+                if(chk.checked && !campos.every(c=>validar(c))){e.preventDefault();return;}
+                const msgLen = textarea.value.trim().length;
+                if(msgLen < minMsg || msgLen > maxMsg){
+                    e.preventDefault();
+                    showModal(msgLen < minMsg ? 'Mínimo de '+minMsg+' caracteres.' : 'Máximo de '+maxMsg+' caracteres.', false);
+                    return;
+                }
+                e.preventDefault();
+                const fd=new FormData(form);
+                setLoading(true);
+                // Indicar que queremos JSON
+                fetch(form.action,{method:'POST',body:fd,headers:{'Accept':'application/json'}})
+                    .then(r=>r.json().catch(()=>({success:false,message:'Resposta inválida.'})))
+                    .then(data=>{
+                        setLoading(false);
+                        if(data.success){
+                            showModal(data.message||'Enviado!',true);
+                            form.reset();
+                            toggle(); // reavaliar área de identificação
+                        }else{
+                            showModal(data.message||'Falha ao enviar.',false);
+                        }
+                    })
+                    .catch(()=>{ setLoading(false); showModal('Erro de rede.',false); });
+            });
         })();
     </script>
 </body>

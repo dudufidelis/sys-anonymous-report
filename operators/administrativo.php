@@ -117,12 +117,31 @@ $resultado = $conn->query($query);
 
     <section>
             <?php
+                // Função de destaque seguro
+                $termoBusca = $busca;
+                $regex = null;
+                if ($termoBusca !== '') {
+                    $escaped = preg_quote($termoBusca, '/');
+                    // Permitir espaços serem tratados como sequência
+                    $regex = '/' . $escaped . '/iu';
+                }
                 while ($row = $resultado->fetch_assoc()) {
                     $dataFormatada = date('d/m/Y H:i', strtotime($row['data_hora']));
                     $nome = $row['nome'];
                     $exibirNome = ($nome === null || $nome === '') ? 'Anônimo' : htmlspecialchars($nome);
                     $telefone = ($row['telefone'] ?? '') !== '' ? htmlspecialchars($row['telefone']) : null;
                     $cpf = ($row['cpf'] ?? '') !== '' ? htmlspecialchars($row['cpf']) : null;
+                    $mensagemBruta = $row['mensagem'];
+                    $mensagemEscapada = htmlspecialchars($mensagemBruta);
+                    if ($regex) {
+                        // Substituir ocorrências no texto escapado sem quebrar entidades; como escapado não contém '<' exceto entidades &amp; etc., regex direta é segura.
+                        $mensagemEscapada = preg_replace_callback($regex, function($m){ return '<span class="hl-term">' . htmlspecialchars($m[0]) . '</span>'; }, $mensagemEscapada);
+                        if ($exibirNome !== 'Anônimo') {
+                            $exibirNome = preg_replace_callback($regex, function($m){ return '<span class="hl-term">' . htmlspecialchars($m[0]) . '</span>'; }, $exibirNome);
+                        }
+                        if ($telefone) { $telefone = preg_replace_callback($regex, function($m){ return '<span class="hl-term">' . htmlspecialchars($m[0]) . '</span>'; }, $telefone); }
+                        if ($cpf) { $cpf = preg_replace_callback($regex, function($m){ return '<span class="hl-term">' . htmlspecialchars($m[0]) . '</span>'; }, $cpf); }
+                    }
                     echo "<article class='report-card'>";
                         echo "<header class='rc-head'>";
                             echo "<div class='rc-ident'>";
@@ -133,7 +152,7 @@ $resultado = $conn->query($query);
                             echo "</div>";
                             echo "<time class='rc-data'>$dataFormatada</time>";
                         echo "</header>";
-                        echo "<div class='rc-body'>" . nl2br(htmlspecialchars($row['mensagem'])) . "</div>";
+                        echo "<div class='rc-body'>" . nl2br($mensagemEscapada) . "</div>";
                     echo "</article>";
                 }
             ?>

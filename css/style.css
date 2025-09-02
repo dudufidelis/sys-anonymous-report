@@ -175,6 +175,24 @@ textarea::-moz-scrollbar {
     width: 5px;
 }
 
+/* Modal de feedback */
+body.modal-open { overflow:hidden; }
+.modal-feedback { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.35); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:999; }
+.modal-feedback.show { opacity:1; pointer-events:auto; }
+.modal-feedback.hiding { opacity:0; }
+.modal-feedback .modal-content { min-width:260px; max-width:480px; background:#fff; border-radius:16px; padding:1.6rem 2rem; box-shadow:0 10px 28px -6px rgba(0,0,0,.45); font-size:1.05rem; line-height:1.4; font-family:'Montserrat',sans-serif; font-weight:500; position:relative; animation:pop .35s ease; }
+.modal-feedback.ok .modal-content { border-left:6px solid #2e8f3d; }
+.modal-feedback.error .modal-content { border-left:6px solid #c0392b; }
+.modal-feedback.ok  #modal-msg { color:#1f6e2c; }
+.modal-feedback.error  #modal-msg { color:#962d22; }
+@keyframes pop { from { transform:scale(.9) translateY(4px); opacity:0;} to { transform:scale(1) translateY(0); opacity:1;} }
+
+.btn-form.loading { position:relative; }
+.btn-form .spinner { width:16px; height:16px; border:3px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-left:6px; }
+@keyframes spin { to { transform:rotate(360deg);} }
+
+#contador { transition: color .25s ease; }
+
 
 
 
