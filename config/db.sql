@@ -1,3 +1,7 @@
+CREATE DATABASE denuncias;
+
+USE denuncias;
+
 CREATE TABLE usuarios (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nome_usuario VARCHAR(255) NOT NULL,

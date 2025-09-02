@@ -1,7 +1,7 @@
 <?php
 // Endpoint sempre JSON para envio de denúncias.
 header('Content-Type: application/json; charset=utf-8');
-include 'connection.php';
+require __DIR__ . '/../config/connection.php';
 
 function out($ok, $msg, $code = 200, $extra = []) {
     http_response_code($ok ? 200 : $code);

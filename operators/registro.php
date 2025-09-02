@@ -1,6 +1,6 @@
 <?php
 
-include 'connection.php';
+require __DIR__ . '/../config/connection.php';
 
 if ($conn->connect_error) {
     die("Erro de conexão: " . $conn->connect_error);
